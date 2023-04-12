@@ -6,10 +6,15 @@ import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.LinearLayoutCompat
+import androidx.core.view.size
 import ph.stacktrek.novare.snakeandladder.james.lumba.databinding.ActivityMainBinding
 import ph.stacktrek.novare.snakeandladder.james.lumba.utility.PreferenceUtility
 import kotlin.random.Random
@@ -24,112 +29,80 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val bundle = intent.extras
-        binding.playerOneText.setText(bundle!!.getString("player1"))
-        binding.playerTwoText.setText(bundle!!.getString("player2"))
-        binding.playerThreeText.setText(bundle!!.getString("player3"))
-        binding.playerFourText.setText(bundle!!.getString("player4"))
 
-        var player1Coords = arrayOf(0, 10)
-        var player2Coords = arrayOf(0, 10)
-        var player3Coords = arrayOf(0, 10)
-        var player4Coords = arrayOf(0, 10)
+        for (i in 0 until bundle!!.size()) {
+
+            val textView = TextView(this)
+            textView.setTextSize(20f)
+            textView.setTextColor(Color.WHITE)
+            textView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            textView.text = bundle!!.getString("player${i + 1}")
+
+            binding.gameInfoLinearlayout.addView(textView)
+        }
+
+        val playersCoords = HashMap<Int, Array<Int>>()
+        playersCoords[1] = arrayOf(0, 10)
+        playersCoords[2] = arrayOf(0, 10)
+        playersCoords[3] = arrayOf(0, 10)
+        playersCoords[4] = arrayOf(0, 10)
 
         val snakeLadderMap = HashMap<String, Array<Int>>()
 //        Snake
-        snakeLadderMap.put("27", arrayOf(10, 10))
-        snakeLadderMap.put("67", arrayOf(6, 10))
-        snakeLadderMap.put("86", arrayOf(6, 8))
-        snakeLadderMap.put("24", arrayOf(8, 9))
-        snakeLadderMap.put("82", arrayOf(4, 8))
-        snakeLadderMap.put("51", arrayOf(6, 5))
-        snakeLadderMap.put("71", arrayOf(8, 3))
+        snakeLadderMap["27"] = arrayOf(10, 10)
+        snakeLadderMap["67"] = arrayOf(6, 10)
+        snakeLadderMap["86"] = arrayOf(6, 8)
+        snakeLadderMap["24"] = arrayOf(8, 9)
+        snakeLadderMap["82"] = arrayOf(4, 8)
+        snakeLadderMap["51"] = arrayOf(6, 5)
+        snakeLadderMap["71"] = arrayOf(8, 3)
 //        Ladder
-        snakeLadderMap.put("110", arrayOf(8, 7))
-        snakeLadderMap.put("410", arrayOf(4, 9))
-        snakeLadderMap.put("810", arrayOf(10, 8))
-        snakeLadderMap.put("18", arrayOf(2, 6))
-        snakeLadderMap.put("88", arrayOf(6, 3))
-        snakeLadderMap.put("106", arrayOf(7, 4))
-        snakeLadderMap.put("13", arrayOf(2, 1))
-        snakeLadderMap.put("103", arrayOf(9, 1))
+        snakeLadderMap["110"] = arrayOf(8, 7)
+        snakeLadderMap["410"] = arrayOf(4, 9)
+        snakeLadderMap["810"] = arrayOf(10, 8)
+        snakeLadderMap["18"] = arrayOf(2, 6)
+        snakeLadderMap["88"] = arrayOf(6, 3)
+        snakeLadderMap["106"] = arrayOf(7, 4)
+        snakeLadderMap["13"] = arrayOf(2, 1)
+        snakeLadderMap["103"] = arrayOf(9, 1)
 
         var currentPlayer = 1
         showCurrentPlayer(currentPlayer)
 
-        PreferenceUtility(applicationContext).apply {
-            println("Preference 1: ${getStringPreferences("1" )}")
-            println("Preference 2: ${getStringPreferences("2" )}")
-            println("Preference 3: ${getStringPreferences("3" )}")
-            println("Preference 4: ${getStringPreferences("4" )}")
-            println("Preference 5: ${getStringPreferences("5" )}")
-        }
-
         binding.rollButton.setOnClickListener {
+
+            binding.rollButton.visibility = View.GONE
+            binding.endTurnButton.visibility = View.VISIBLE
+            binding.diceText.visibility = View.VISIBLE
 
             val diceResult = rollDice()
 
-            when (currentPlayer) {
-                1 -> {
-                    var newCoords = updateCoords(diceResult, player1Coords)
-                    movePlayer(currentPlayer, player1Coords, newCoords)
-                    player1Coords = newCoords
+            var newCoords = updateCoords(diceResult, playersCoords.getValue(currentPlayer))
+            movePlayer(currentPlayer, playersCoords.getValue(currentPlayer), newCoords)
+            playersCoords[currentPlayer] = newCoords
 
-                    if(snakeLadderMap.containsKey("${player1Coords[0]}${player1Coords[1]}")) {
-                        newCoords = snakeLadderMap.getValue("${player1Coords[0]}${player1Coords[1]}")
-                        movePlayer(currentPlayer, player1Coords, newCoords)
-                        player1Coords = newCoords
-                    }
-
-                    if (player1Coords[0] == 10 && player1Coords[1] == 1) {
-                        showCongratulationDialog(bundle!!.getString("player1").toString())
-                    }
-                }
-                2 -> {
-                    var newCoords = updateCoords(diceResult, player2Coords)
-                    movePlayer(currentPlayer, player2Coords, newCoords)
-                    player2Coords = newCoords
-
-                    if(snakeLadderMap.containsKey("${player2Coords[0]}${player2Coords[1]}")) {
-                        newCoords = snakeLadderMap.getValue("${player2Coords[0]}${player2Coords[1]}")
-                        movePlayer(currentPlayer, player2Coords, newCoords)
-                        player2Coords = newCoords
-                    }
-
-                    if (player2Coords[0] == 10 && player2Coords[1] == 1) {
-                        showCongratulationDialog(bundle!!.getString("player2").toString())
-                    }
-                }
-                3 -> {
-                    var newCoords = updateCoords(diceResult, player3Coords)
-                    movePlayer(currentPlayer, player3Coords, newCoords)
-                    player3Coords = newCoords
-
-                    if(snakeLadderMap.containsKey("${player3Coords[0]}${player3Coords[1]}")) {
-                        newCoords = snakeLadderMap.getValue("${player3Coords[0]}${player3Coords[1]}")
-                        movePlayer(currentPlayer, player3Coords, newCoords)
-                        player3Coords = newCoords
-                    }
-
-                    if (player3Coords[0] == 10 && player3Coords[1] == 1) {
-                        showCongratulationDialog(bundle!!.getString("player3").toString())
-                    }
-                }
-                4 -> {
-                    var newCoords = updateCoords(diceResult, player4Coords)
-                    movePlayer(currentPlayer, player4Coords, newCoords)
-                    player4Coords = newCoords
-
-                    if(snakeLadderMap.containsKey("${player4Coords[0]}${player4Coords[1]}")) {
-                        newCoords = snakeLadderMap.getValue("${player4Coords[0]}${player4Coords[1]}")
-                        movePlayer(currentPlayer, player4Coords, newCoords)
-                        player4Coords = newCoords
-                    }
-
-                    if (player4Coords[0] == 10 && player4Coords[1] == 1) {
-                        showCongratulationDialog(bundle!!.getString("player4").toString())
-                    }
-                }
+            if(snakeLadderMap.containsKey(
+                    "${playersCoords.getValue(currentPlayer)[0]}${playersCoords
+                        .getValue(currentPlayer)[1]}")) {
+                newCoords = snakeLadderMap.getValue("${playersCoords
+                    .getValue(currentPlayer)[0]}${playersCoords.getValue(currentPlayer)[1]}")
+                movePlayer(currentPlayer, playersCoords.getValue(currentPlayer), newCoords)
+                playersCoords[currentPlayer] = newCoords
             }
+
+            if (playersCoords.getValue(currentPlayer)[0] == 10 && playersCoords
+                    .getValue(currentPlayer)[1] == 1) {
+                showCongratulationDialog(bundle!!.getString("player$currentPlayer").toString())
+            }
+        }
+
+        binding.endTurnButton.setOnClickListener {
+            binding.endTurnButton.visibility = View.GONE
+            binding.rollButton.visibility = View.VISIBLE
+            binding.diceText.visibility = View.GONE
 
             currentPlayer++
             if (currentPlayer > bundle.size()) {
@@ -142,9 +115,19 @@ class MainActivity : AppCompatActivity() {
 
     fun rollDice(): Int {
 
+        val diceImageView = findViewById<ImageView>(R.id.diceImageResId)
         val random = Random
         val diceResult = random.nextInt(6) + 1
         binding.diceText.setText(diceResult.toString())
+        val diceImageResId = when (diceResult) {
+            1 -> R.drawable.dice_1
+            2 -> R.drawable.dice_2
+            3 -> R.drawable.dice_3
+            4 -> R.drawable.dice_4
+            5 -> R.drawable.dice_5
+            else -> R.drawable.dice_6
+        }
+        diceImageView.setImageResource(diceImageResId)
         return diceResult
     }
 
@@ -186,6 +169,8 @@ class MainActivity : AppCompatActivity() {
         textView.setTextSize(35f)
         textView.setTypeface(null, Typeface.BOLD)
         textView.setTextColor(Color.rgb(255,165,0))
+        textView.gravity = Gravity.CENTER
+        textView.setTextColor(Color.BLUE)
         textView.text = currentPlayer.toString()
 
         presentCounter.addView(textView)
@@ -194,17 +179,17 @@ class MainActivity : AppCompatActivity() {
 
     fun showCurrentPlayer(currentPlayer: Int) {
 
-        binding.playerOneText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-        binding.playerTwoText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-        binding.playerThreeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-        binding.playerFourText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-
-        when (currentPlayer) {
-            1 -> {binding.playerOneText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)}
-            2 -> {binding.playerTwoText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)}
-            3 -> {binding.playerThreeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)}
-            4 -> {binding.playerFourText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)}
+        if (currentPlayer - 1 > 0) {
+            val pastTextView = binding.gameInfoLinearlayout.getChildAt(currentPlayer - 1) as TextView
+            pastTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)
+        } else {
+            val pastTextView = binding.gameInfoLinearlayout.getChildAt(binding
+                .gameInfoLinearlayout.size - 1) as TextView
+            pastTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20F)
         }
+
+        val presentTextView = binding.gameInfoLinearlayout.getChildAt(currentPlayer) as TextView
+        presentTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30F)
     }
 
     fun showCongratulationDialog(player: String) {
